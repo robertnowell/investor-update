@@ -1,0 +1,9 @@
+{
+  "_comment": "Ships the Kopi MCP with the plugin so the generate step works on install. Endpoint validated live 2026-06-01 (OAuth-gated, scope mcp:tools; apex 308->www). First call triggers OAuth sign-in. Tools are referenced as Kopi:create_email, Kopi:set_active_brand, etc.",
+  "mcpServers": {
+    "Kopi": {
+      "type": "http",
+      "url": "https://www.trykopi.ai/mcp"
+    }
+  }
+}

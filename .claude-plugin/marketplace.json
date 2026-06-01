@@ -1,0 +1,17 @@
+{
+  "name": "investor-update-marketplace",
+  "owner": {
+    "name": "Robert Nowell"
+  },
+  "metadata": {
+    "description": "Generate concise monthly investor updates from your own tools, drafted on-brand via Kopi."
+  },
+  "plugins": [
+    {
+      "name": "investor-update",
+      "description": "Compile the month from GitHub/Slack/custom adapters, distill to a headline-only brief, and draft an on-brand investor-update email via the Kopi MCP.",
+      "category": "productivity",
+      "source": "./"
+    }
+  ]
+}

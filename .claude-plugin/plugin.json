@@ -1,0 +1,12 @@
+{
+  "name": "investor-update",
+  "version": "0.1.0",
+  "description": "Generate a concise monthly investor update: compile the month from your own tools (GitHub, Slack, or custom adapters), distill it to a headline-only brief, and draft it as an on-brand email via the Kopi MCP.",
+  "author": {
+    "name": "Robert Nowell"
+  },
+  "homepage": "https://github.com/robertnowell/investor-update",
+  "repository": "https://github.com/robertnowell/investor-update",
+  "license": "MIT",
+  "keywords": ["investor-update", "fundraising", "startup-metrics", "kopi", "claude-skill", "claude-code"]
+}

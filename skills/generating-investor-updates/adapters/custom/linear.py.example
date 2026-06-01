@@ -1,0 +1,43 @@
+# EXAMPLE adapter — rename to `linear.py` to enable. (Files ending .example are not loaded.)
+#
+# Shows the whole contract for a "bring your own source": subclass Adapter, declare the env
+# var(s) you need, and return {source, signal, narrative}. Discovery picks it up automatically
+# — no SKILL.md edits. signal = counts/deltas; narrative = a few raw lines to crystallize.
+import os
+import sys
+import json
+import urllib.request
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))  # reach _contract.py
+from _contract import Adapter, AdapterUnavailable
+
+
+class LinearAdapter(Adapter):
+    name = "linear"
+    required_env = ("LINEAR_API_KEY",)
+
+    def fetch(self, start: str, end: str) -> dict:
+        key = os.environ.get("LINEAR_API_KEY")
+        if not key:
+            raise AdapterUnavailable("set LINEAR_API_KEY")
+        query = {
+            "query": """
+              query($after: DateTime!, $before: DateTime!) {
+                issues(filter: {completedAt: {gte: $after, lte: $before}}) {
+                  nodes { title identifier }
+                }
+              }""",
+            "variables": {"after": f"{start}T00:00:00Z", "before": f"{end}T23:59:59Z"},
+        }
+        req = urllib.request.Request(
+            "https://api.linear.app/graphql",
+            data=json.dumps(query).encode(),
+            headers={"Authorization": key, "Content-Type": "application/json"},
+        )
+        nodes = json.load(urllib.request.urlopen(req))["data"]["issues"]["nodes"]
+        return {
+            "source": "linear",
+            "signal": {"issues_completed": len(nodes)},
+            "narrative": [n["title"] for n in nodes[:40]],
+        }

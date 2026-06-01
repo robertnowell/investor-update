@@ -1,0 +1,7 @@
+.DS_Store
+*.swp
+.env
+__pycache__/
+*.pyc
+# user-added local adapters (their own credentials/sources):
+skills/generating-investor-updates/adapters/custom/*.py
