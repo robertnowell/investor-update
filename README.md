@@ -1,4 +1,4 @@
-[![Version](https://img.shields.io/badge/version-0.1.0-blue)](https://github.com/robertnowell/investor-update)
+[![Version](https://img.shields.io/badge/version-0.1.1-blue)](https://github.com/robertnowell/investor-update)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![Claude Code Skill](https://img.shields.io/badge/Claude_Code-Skill-blueviolet)](https://docs.anthropic.com/en/docs/claude-code/skills)
 

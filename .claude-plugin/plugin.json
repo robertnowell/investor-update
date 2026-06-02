@@ -1,7 +1,7 @@
 {
   "name": "investor-update",
-  "version": "0.1.0",
-  "description": "Generate a concise monthly investor update: compile the month from your own tools (GitHub, Slack, or custom adapters), distill it to a headline-only brief, and draft it as an on-brand email via the Kopi MCP.",
+  "version": "0.1.1",
+  "description": "Generate a concise monthly investor update: compile the month from your own tools (GitHub, Slack, or custom adapters), distill it to a headline-only brief, and use Kopi to turn it into an on-brand HTML email template you can send from any email platform.",
   "author": {
     "name": "Robert Nowell"
   },

@@ -25,9 +25,10 @@ def main():
     for cmd, why in (("python3", "required"), ("gh", "for the github source"), ("node", "optional")):
         print(f"  {'OK ' if have(cmd) else '-- '} {cmd:8} ({why})")
 
-    print("\nKopi MCP (REQUIRED to generate the email):")
-    print("  -> ensure the 'Kopi' MCP is connected in your client (tools like Kopi:create_email).")
-    print("     This skill cannot probe it from here; if drafting fails, connect Kopi first.")
+    print("\nKopi MCP (REQUIRED to draft): turns the brief into an on-brand HTML email")
+    print("  template you can send from any email platform (Klaviyo, Mailchimp, etc.).")
+    print("  -> connect the 'Kopi' MCP in your client (one-time sign-in; tools like Kopi:create_email).")
+    print("     Everything up to the brief works without it; if drafting fails, connect Kopi first.")
 
     print("\nData sources (any combination; financials are entered by you each run):")
     adapters = discover(SKILL / "adapters")

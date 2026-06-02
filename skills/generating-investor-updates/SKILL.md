@@ -1,6 +1,6 @@
 ---
 name: generating-investor-updates
-description: Generates a concise monthly investor update for a startup. Compiles the month from the founder's own tools (GitHub PRs, Slack activity, or custom adapters), distills it to a headline-only brief, and drafts it as an on-brand email via the Kopi MCP. Use when the user says "investor update", "monthly update", "draft the investor update", or names a month to recap.
+description: Generates a concise monthly investor update for a startup. Compiles the month from the founder's own tools (GitHub PRs, Slack activity, or custom adapters), distills it to a headline-only brief, and uses Kopi to turn that brief into an on-brand HTML email template you can send from any email platform (Klaviyo, Mailchimp, etc.). Use when the user says "investor update", "monthly update", "draft the investor update", or names a month to recap.
 ---
 
 # Generating investor updates
@@ -16,8 +16,10 @@ Read `reference/good-update.md` before distilling. To add or debug a data source
 ## 0. Preflight (first run)
 Run the doctor — it reports deps + which sources are live and never hard-fails:
 `python3 "${CLAUDE_PLUGIN_ROOT}/skills/generating-investor-updates/scripts/preflight.py"`
-The **one hard requirement is the Kopi MCP** (tools like `Kopi:create_email`). If those tools
-aren't available, stop and have the user connect Kopi (see INSTALL.md).
+**What Kopi does (the payoff):** it turns the brief into an **on-brand HTML email
+template you can send from any email platform** (Klaviyo, Mailchimp, etc.). It's the one hard
+requirement — drafting needs a one-time Kopi sign-in. Everything up to the brief works without it;
+if the `Kopi:` tools aren't available, tell the user to connect Kopi once (see INSTALL.md).
 
 ## 1. Inputs
 - **Month** = `$ARGUMENTS` (e.g. `2026-05`); else default to the previous calendar month.
