@@ -16,14 +16,22 @@ brand IDs in the portable files).
 ## 2. Behavioral scenarios (`scenarios.jsonl`)
 Per Anthropic's eval-driven approach: drive a fresh Claude instance that has the plugin installed
 (`claude --plugin-dir .`) through each scenario, then judge the transcript against
-`expected_behavior`. Four scenarios target the things that break for new users:
-- **happy-path** — full sources; checks headline-only output, MoM via MCP, computed Default Dead, no invented numbers.
+`expected_behavior`. Two groups:
+
+*Wiring / degradation — does it work for a new user:*
+- **happy-path** — full sources; checks headline-only output, MoM, computed Default Dead, no invented numbers.
 - **zero-sources** — nothing configured; must degrade gracefully, not refuse.
-- **kopi-missing** — the one hard dep absent; must stop cleanly and not fabricate an email.
+- **kopi-missing** — the recommended dep absent; must offer the plaintext path, not fabricate an email.
 - **byo-adapter-linear** — a different stack; custom adapter auto-discovered with no SKILL.md edits.
 
+*Distillation quality — the part that actually fails (each supplies a fixed digest so the judge is deterministic):*
+- **distill-signal-not-titles** — highlights must lead with the Granola business narrative, NOT GitHub PR-title jargon.
+- **subject-not-marketing** — the subject stays investor-toned (metrics), never a marketing/emoji/"scaling fast" line.
+- **audience-filter** — off-audience meetings (a credit pitch, an IP negotiation) are dropped even when they sound big.
+
 Score each `expected_behavior` line pass/fail (LLM-judge or manual). A release ships only when all
-four pass on a clean `--plugin-dir` install.
+seven pass on a clean `--plugin-dir` install. The distillation group encodes real dogfood bugs
+(PR-title pattern-matching, marketing subject drift, an off-audience "credit pitch" surfaced as a win).
 
 ## 3. Live dogfood (the real signal)
 The maintainer runs the skill on their own company every month (see

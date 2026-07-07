@@ -75,6 +75,10 @@ LEAKS = {
     "absolute home path": re.compile(r"/Users/[a-z]+/"),
     "prod DB url env": re.compile(r"NEON_DB_URL"),
     "hardcoded brand id": re.compile(r"\b[A-Za-z0-9_-]{21}\b(?=.*brand)", re.I),
+    # a real owner/repo baked in where a <owner/repo> placeholder belongs
+    "hardcoded github repo": re.compile(r"GITHUB_REPO=(?!<|owner/repo\b)[\w.-]+/[\w.-]+"),
+    # any real email address in shared code (example.* is fine; personal data must not ship)
+    "personal email address": re.compile(r"[A-Za-z0-9._%+-]+@(?!example\.)[A-Za-z0-9.-]+\.[A-Za-z]{2,}"),
 }
 leak_hits = []
 for f in PORTABLE:
