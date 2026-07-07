@@ -5,9 +5,9 @@ description: Generates a concise monthly investor update for a startup. Compiles
 
 # Generating investor updates
 
-Compile widely → crystallize to a tiny diamond → draft via Kopi. Opinionated about **what a good
-update is** (`reference/good-update.md`) and that you **draft it with Kopi**; unopinionated about
-where the data lives (any adapter under `adapters/`).
+Compile widely → crystallize to a tiny diamond → deliver (draft via Kopi, or hand off as plaintext).
+Opinionated about **what a good update is** (`reference/good-update.md`); unopinionated about where
+the data lives (any adapter under `adapters/`) and how you send it (Kopi is the recommended default).
 
 Read `reference/good-update.md` before distilling. To add or debug a data source, read
 `reference/adapters.md`. Paths below use `${CLAUDE_PLUGIN_ROOT}`; the skill dir is
@@ -29,31 +29,40 @@ if the `Kopi:` tools aren't available, tell the user to connect Kopi once (see I
 
 ## 2. Compile (ingest widely)
 ```
-GITHUB_REPO=tryrendition/Rendition claude-secrets run \
-  --inject GRANOLA_API_KEY=GRANOLA_API_KEY \
-  --inject SLACK_USER_TOKEN=SLACK_USER_TOKEN \
+python3 "${CLAUDE_PLUGIN_ROOT}/skills/generating-investor-updates/scripts/compile.py" <MONTH>
+```
+Runs every **configured** adapter; a source whose credential is missing is **skipped and reported,
+not failed**. Configure sources via env (see INSTALL.md) — none is required:
+- `github`  → `GITHUB_REPO=<owner/repo>` + `gh auth login`
+- `slack`   → `SLACK_TOKEN` (or `SLACK_USER_TOKEN`), scopes `channels:read`,`channels:history`
+- `granola` → `GRANOLA_API_KEY` (a `grn_` key); optional `GRANOLA_DENY_EMAILS` /
+  `GRANOLA_DENY_TITLE_KEYWORDS` to skip your own personal meetings
+
+Supply secrets **however you like** — a shell export, a `.env`, or a secret manager. On macOS with
+`claude-secrets`, one convenient form (substitute your own repo + secret names):
+```
+GITHUB_REPO=<owner/repo> claude-secrets run \
+  --inject GRANOLA_API_KEY=GRANOLA_API_KEY --inject SLACK_TOKEN=SLACK_TOKEN \
   -- python3 "${CLAUDE_PLUGIN_ROOT}/skills/generating-investor-updates/scripts/compile.py" <MONTH>
 ```
-This feeds all three sources: `github` (merged PRs across the Rendition monorepo — `GITHUB_REPO`
-is a plain inline env, `gh` supplies auth), `granola` (meeting summaries, Keychain key), `slack`
-(alert channels → counts, human channels → narrative; token from Keychain). Any source whose
-credential is missing is **skipped and reported, not failed** — if `claude-secrets` isn't
-installed, drop the wrapper and those two just skip.
-Output is `{ sources: {github,slack,...}, skipped: [...] }` — `signal` = counts/deltas,
-`narrative` = raw lines. (Enable sources via env — see INSTALL.md.)
+Output is `{ sources: {...}, skipped: [...] }` — `signal` = counts/deltas, `narrative` = raw lines.
 
-## 3. Prior update via Klaviyo (MoM + design reference)
-Klaviyo is where updates are actually **sent** — the source of truth, not the Kopi draft. Run:
-```
-claude-secrets run --inject KOPI_KLAVIYO_PRIVATE_KEY=KLAVIYO_API_KEY \
-  -- python3 "${CLAUDE_PLUGIN_ROOT}/skills/generating-investor-updates/scripts/prior_update.py" <MONTH>
-```
-Returns `{name, send_time, campaign_id, klaviyo_url, html}` for the most recent "Kopi AI Investor
-Update" campaign sent before `<MONTH>` (skips clones/tests). `{"status":"none"}` = first-ever
-update → just prompt the founder for last month's numbers.
-- Read the prior month's metrics out of the returned **`html`** body → month-over-month deltas.
-- Use that same `html` as the **design/layout reference** so the new draft matches the sent look.
-Kopi is not touched here anymore; it still **drafts** the new email in step 5.
+## 3. Prior update (MoM deltas + a design reference)
+You need last month's numbers to show month-over-month deltas, and ideally last month's layout as a
+reference. Pick the **most accessible source that applies** — MoM always computes against the most
+recent prior update:
+- **Default — ask the founder** (works for everyone): request last month's headline figures (cash,
+  burn, runway, MRR/revenue, customer count), or have them paste last month's update. No setup, no
+  dependency. This is the fallback whenever the options below aren't configured.
+- **If the update lives in Kopi**: `Kopi:set_active_brand` → `Kopi:view_email` the most recent
+  investor update → read its numbers and keep its URL as the layout reference.
+- **If it's sent as a Klaviyo campaign** (optional, needs `KLAVIYO_API_KEY`):
+  ```
+  KLAVIYO_API_KEY=<key> python3 "${CLAUDE_PLUGIN_ROOT}/skills/generating-investor-updates/scripts/prior_update.py" <MONTH>
+  ```
+  Returns `{name, send_time, klaviyo_url, html}` for the most recent campaign whose name contains
+  "investor update", sent before `<MONTH>` (skips clones/tests). `{"status":"none"}` → fall back to
+  asking the founder. Read the metrics from the `html` body; reuse the `html` as the layout reference.
 
 ## 4. Distill (the tiny diamond)
 Per `reference/good-update.md`, write a concise **headline-only** founder-note brief:
@@ -72,17 +81,22 @@ reader (and the founder) will not know what "days_of_cover subscription split" m
 Anthropic/vendor **credit pitch**, an IP or hiring **negotiation**, pure vendor **ops**. Distill the
 story an investor needs and drop the rest, even when it sounds impressive. Biggest ≠ relevant.
 
-## 5. Draft via Kopi
-For each angle the founder wants (a few is plenty), call `Kopi:create_email` with the brief. For
-layout, pass `referenceEmailUrl` = the prior update's Kopi draft URL if the founder still has one;
-otherwise steer the draft with the step-3 Klaviyo `html` as the reference so it keeps the sent
-investor-update look (not a marketing one). Generation is async (~5–10 min). Return the draft URLs
-+ the inbox URL.
+## 5. Deliver
+**Default (recommended) — draft via Kopi.** For each angle the founder wants (a few is plenty), call
+`Kopi:create_email` with the brief; for layout, pass `referenceEmailUrl` = the prior update (a Kopi
+draft URL if they have one), else steer with the prior update's `html` from step 3 so it keeps the
+investor-update look (not a marketing one). Generation is async (~5–10 min); return the draft URLs +
+the inbox URL. Kopi renders the brief into an on-brand HTML email sendable from any platform.
+
+**Plaintext option (no Kopi).** If the founder sends from Gmail/Docs, the step-4 brief **is** the
+deliverable — it's already headline-only. Hand it over as clean markdown/plaintext (metrics row +
+short sections) and skip Kopi. Everything up to here works without Kopi.
 
 ## 6. Review & hand off
-Open each draft; verify every number traces to input, and that no offer/metric was invented.
-The auto-subject may drift to a marketing line — reset it to a clean investor subject. Export to
-the **investor list only**, never customer/campaign lists.
+Verify every number traces to input and that no offer/metric was invented. **Subject line must stay
+investor-toned** — if drafting via Kopi, its auto-subject often drifts to a marketing line (emoji,
+"scaling fast"); reset it to a clean `{Company} — {Month}: {cash} cash · {runway}mo · {MRR} ({±}% MoM)`.
+When sending, export to the **investor list only**, never customer/campaign lists.
 
 ## Guardrails
 - Every figure traces to founder input or the compiled digest; mark unknowns `[confirm]`.
